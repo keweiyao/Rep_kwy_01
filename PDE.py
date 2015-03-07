@@ -1,32 +1,48 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def S(x):
-    return 0.3*np.exp(-(x-5)*(x-5))
+def V(x):
+    return -5*np.exp(-0.5*np.abs(x))+1/(np.abs(x)+0.01)
 
-#1D diffusion solver
-def solver(f, t_max):
-    N_max_x = len(f)
-    x = np.linspace(0,10,N_max_x)
-    dx = 10./N_max_x
-    dt = dx*dx/2.
-    f_temp = np.copy(f)
-    N_max_t = int(t_max/dt)
+def update_V(dt, phi, x):
+    return np.exp(-1j*dt*V(x))*phi
+
+def update_T(dt, phi, x):
+    N = len(x)
+    k = np.linspace(-20,20,N)
+    psi = np.fft.fft(phi)
+    for i in range(0, len(psi)):
+        psi[i] = np.exp(-1j*dt*(k[(i+int(0.5*N))%N])**2)*psi[i]
+    phi = np.fft.ifft(psi)
+    return phi
+
+
+def solver(phi, x, t_m):
+    N_x = len(x)
+    dx = x[1]-x[0]
+    dt = 0.01
+    phi = update_V(dt/2., phi, x)
+    phi = update_T(dt, phi, x)
     
-    for n in range(N_max_t):
-        for i in range(1, N_max_x-1):
-            f_temp[i] = f[i] + (f[i+1]+f[i-1]-2*f[i])/dx/dx*dt + S(x[i])*dt
-        f = np.copy(f_temp)
-        if n%20==0:
+    N_max = int(t_m/dt)
+    for i in range(N_max):
+        phi = update_V(dt, phi, x)
+        phi = update_T(dt, phi, x)
+        if i%5==0:
             plt.clf()
-            plt.plot(x, f,'b-')
-            plt.axis([0,10,0,1])
-            plt.pause(0.1)   
-    return 0
+            plt.plot(x, V(x),'r-')
+            plt.plot(x, np.abs(phi),'b-')
+            plt.axis([-20,20,-1,1])
+            plt.pause(0.02)
+    phi = update_V(dt/2., phi, x)
+    return phi
 
-#___Main_______
-x = np.linspace(0,10,200)
-sigma = 0.5
-x0 = 3
-f = np.exp(-(x-x0)*(x-x0)/sigma/sigma)
-r = solver(f, 2)
+#____main_______
+x = np.linspace(-20,20,2000)
+x0 = -10
+sigma = 2
+phi0 = np.exp(-0.5*((x-x0)/sigma)**2+1j*x*40)
+plt.figure(figsize = (15, 3))
+phi = solver(phi0,x,15.0)
+plt.show()
+
