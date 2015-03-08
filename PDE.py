@@ -32,7 +32,7 @@ def solver(phi, x, t_m):
             plt.clf()
             plt.plot(x, V(x),'r-')
             plt.plot(x, np.abs(phi),'b-')
-            plt.axis([-20,20,-1,1])
+            plt.axis([-20,20,-2,2])
             plt.pause(0.02)
     phi = update_V(dt/2., phi, x)
     return phi
@@ -42,7 +42,7 @@ x = np.linspace(-20,20,2000)
 x0 = -10
 sigma = 2
 phi0 = np.exp(-0.5*((x-x0)/sigma)**2+1j*x*40)
-plt.figure(figsize = (15, 3))
+plt.figure(figsize = (15, 5))
 phi = solver(phi0,x,15.0)
 plt.show()
 
